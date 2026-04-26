@@ -18,11 +18,20 @@ test:
         swiftc -typecheck "$f"
     done
 
-# Build the toggle binary.
+# Assemble build/micflip.app/ and ad-hoc sign it.
 build:
-    swiftc -O main.swift -o micflip
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rm -rf build/micflip.app
+    mkdir -p build/micflip.app/Contents/MacOS
+    cp Info.plist build/micflip.app/Contents/Info.plist
+    swiftc -O main.swift -o build/micflip.app/Contents/MacOS/micflip
+    codesign --sign - build/micflip.app
 
-# Install to ~/bin (matches the layout in plans/1.md).
+# Install the bundle to ~/Applications/micflip.app.
 install: build
-    install -d ~/bin
-    install -m 0755 micflip ~/bin/micflip
+    #!/usr/bin/env bash
+    set -euo pipefail
+    install -d ~/Applications
+    rm -rf ~/Applications/micflip.app
+    cp -R build/micflip.app ~/Applications/micflip.app
