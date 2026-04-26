@@ -2,9 +2,13 @@ import CoreAudio
 import Foundation
 import UserNotifications
 
-// Scarlett Solo (desk mic) and AirPods Pro (walk-around). Re-run
-// list-inputs.swift if you swap hardware.
-let DEVICE_A_UID = "AppleUSBAudioEngine:Focusrite:Scarlett Solo 4th Gen:S1MWC4Y3A24BDE:1,2"
+// "A" candidates in priority order: first one currently plugged in
+// wins. Scarlett at the desk; MacBook built-in everywhere else (e.g.
+// in bed). "B" is always the AirPods.
+let DEVICE_A_UIDS = [
+    "AppleUSBAudioEngine:Focusrite:Scarlett Solo 4th Gen:S1MWC4Y3A24BDE:1,2",
+    "BuiltInMicrophoneDevice",
+]
 let DEVICE_B_UID = "74-77-86-79-96-3F:input"
 
 func die(_ message: String) -> Never {
@@ -82,15 +86,15 @@ func cfStringProperty(_ id: AudioDeviceID, selector: AudioObjectPropertySelector
 }
 
 func resolveUIDs() -> (a: AudioDeviceID, b: AudioDeviceID) {
-    var a: AudioDeviceID? = nil
-    var b: AudioDeviceID? = nil
+    var idsByUID: [String: AudioDeviceID] = [:]
     for id in allDeviceIDs() {
         let uid = cfStringProperty(id, selector: kAudioDevicePropertyDeviceUID, label: "kAudioDevicePropertyDeviceUID")
-        if uid == DEVICE_A_UID { a = id }
-        if uid == DEVICE_B_UID { b = id }
+        idsByUID[uid] = id
     }
-    guard let aID = a else { die("device A not present (UID \(DEVICE_A_UID))") }
-    guard let bID = b else { die("device B not present (UID \(DEVICE_B_UID))") }
+    guard let aID = DEVICE_A_UIDS.lazy.compactMap({ idsByUID[$0] }).first else {
+        die("no A device present (tried: \(DEVICE_A_UIDS.joined(separator: ", ")))")
+    }
+    guard let bID = idsByUID[DEVICE_B_UID] else { die("device B not present (UID \(DEVICE_B_UID))") }
     return (aID, bID)
 }
 
