@@ -2,9 +2,10 @@ import CoreAudio
 import Foundation
 import UserNotifications
 
-// TODO: replace with the UIDs from `swiftc -O list-inputs.swift -o /tmp/list-inputs && /tmp/list-inputs`.
-let DEVICE_A_UID = "REPLACE_ME_A"
-let DEVICE_B_UID = "REPLACE_ME_B"
+// Scarlett Solo (desk mic) and AirPods Pro (walk-around). Re-run
+// list-inputs.swift if you swap hardware.
+let DEVICE_A_UID = "AppleUSBAudioEngine:Focusrite:Scarlett Solo 4th Gen:S1MWC4Y3A24BDE:1,2"
+let DEVICE_B_UID = "74-77-86-79-96-3F:input"
 
 func die(_ message: String) -> Never {
     FileHandle.standardError.write(Data("micflip: \(message)\n".utf8))
