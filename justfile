@@ -52,3 +52,20 @@ install: build
     install -d ~/Applications
     rm -rf ~/Applications/micflip.app
     cp -R build/micflip.app ~/Applications/micflip.app
+
+# Tag, build, zip and publish a GitHub release. Triggers the
+# bump-cask workflow which opens a PR against nymann/homebrew-tap.
+release VERSION:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "$(git status --porcelain)" ]]; then
+        echo "working tree dirty — commit or stash before releasing" >&2
+        exit 1
+    fi
+    just build
+    rm -f build/micflip-*.zip
+    ditto -c -k --sequesterRsrc --keepParent build/micflip.app build/micflip-{{VERSION}}.zip
+    git tag -a v{{VERSION}} -m "v{{VERSION}}"
+    git push origin v{{VERSION}}
+    gh release create v{{VERSION}} build/micflip-{{VERSION}}.zip \
+        --title "v{{VERSION}}" --generate-notes
