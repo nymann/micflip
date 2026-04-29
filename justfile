@@ -25,17 +25,24 @@ build:
     rm -rf build/micflip.app
     mkdir -p build/micflip.app/Contents/MacOS build/micflip.app/Contents/Resources
     cp Info.plist build/micflip.app/Contents/Info.plist
-    cp micflip.icns build/micflip.app/Contents/Resources/micflip.icns
+    xcrun actool micflip.xcassets \
+        --compile build/micflip.app/Contents/Resources \
+        --platform macosx \
+        --minimum-deployment-target 26.0 \
+        --app-icon AppIcon \
+        --include-all-app-icons \
+        --output-partial-info-plist /tmp/micflip-actool.plist >/dev/null
     swiftc -O main.swift -o build/micflip.app/Contents/MacOS/micflip
     codesign --sign - build/micflip.app
 
-# Regenerate micflip.icns from tools/make-icon.swift.
+# Regenerate AppIcon PNGs (xcassets) and the legacy micflip.icns from tools/make-icon.swift.
 icon:
     #!/usr/bin/env bash
     set -euo pipefail
     swiftc -O tools/make-icon.swift -o /tmp/micflip-make-icon
-    rm -rf /tmp/micflip.iconset
-    /tmp/micflip-make-icon /tmp/micflip.iconset
+    /tmp/micflip-make-icon micflip.xcassets/AppIcon.appiconset
+    rm -rf /tmp/micflip.iconset && mkdir /tmp/micflip.iconset
+    cp micflip.xcassets/AppIcon.appiconset/*.png /tmp/micflip.iconset/
     iconutil -c icns /tmp/micflip.iconset -o micflip.icns
 
 # Install the bundle to ~/Applications/micflip.app.

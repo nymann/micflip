@@ -17,6 +17,8 @@
     <key>LSUIElement</key>
     <true/>
     <key>CFBundleIconFile</key>
-    <string>micflip</string>
+    <string>AppIcon</string>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
 </dict>
 </plist>

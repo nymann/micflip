@@ -33,10 +33,29 @@ try FileManager.default.createDirectory(atPath: outDir, withIntermediateDirector
 let background = NSColor(srgbRed: 1.0, green: 0.42, blue: 0.21, alpha: 1.0)
 
 func render(pixels: Int) -> Data {
-    let s = CGFloat(pixels)
-    let img = NSImage(size: NSSize(width: s, height: s))
-    img.lockFocus()
+    // Draw into a 1:1 NSBitmapImageRep so the output PNG has the
+    // requested pixel dimensions exactly. NSImage.lockFocus() picks
+    // up the screen's backing scale on Retina, which would emit a
+    // 2x-too-big PNG and make actool reject the asset catalog.
+    let p = pixels
+    let rep = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: p,
+        pixelsHigh: p,
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bytesPerRow: 0,
+        bitsPerPixel: 32
+    )!
 
+    let prior = NSGraphicsContext.current
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    defer { NSGraphicsContext.current = prior }
+
+    let s = CGFloat(p)
     let inset = s * 0.08
     let cornerRadius = s * 0.22
     let bgRect = NSRect(x: 0, y: 0, width: s, height: s).insetBy(dx: inset, dy: inset)
@@ -56,8 +75,6 @@ func render(pixels: Int) -> Data {
         ))
     }
 
-    img.unlockFocus()
-    let rep = NSBitmapImageRep(data: img.tiffRepresentation!)!
     return rep.representation(using: .png, properties: [:])!
 }
 
